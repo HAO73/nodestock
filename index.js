@@ -1,9 +1,43 @@
+//Stock Market App 
+
 const express = require('express');
 const app = express();
-const exphbs  = require('express-handlebars');
+const exphbs = require('express-handlebars');
 const path = require('path');
+const request = require('request');
+const bodyParser=require ('body-parser');
+
+
+
+// use body-parser middleware
+
+app.use(bodyParser.urlencoded({extendded:false}));
+
 
 const PORT = process.env.PORT || 5000;
+/// API pk_1896151f0fb74c31b150409d43b14854
+/// create call_api function
+
+function call_api(finishedAPI,ticker) {
+
+
+    request('https://cloud.iexapis.com/stable/stock/' + ticker +'/quote?token=pk_1896151f0fb74c31b150409d43b14854', { json: true }, (err, res, body) => {
+
+        if (err) { return console.log(err); }
+        if (res.statusCode === 200) {
+
+            finishedAPI (body)
+        };
+
+
+
+    });
+};
+
+
+
+
+
 
 // Set Handlebars middleware
 
@@ -13,20 +47,45 @@ app.set('view engine', 'handlebars');
 
 const otherstuff = "hello there, this is other stuff!";
 
-// Set Handlebars routes
+// Set Handlebars index GET routes
 
-app.get('/', function (req, res) {
-    res.render('home',{
-        stuff: otherstuff
-    });
+app.get('/',function (req,res){
+        call_api(function(doneAPI){
+            res.render('home', {
+                stock: doneAPI
+            });
+        },"fb");
 });
- 
+
+
+// Set Handlebars index POST routes
+
+
+
+app.post('/',function (req,res){
+    call_api(function(doneAPI){
+        // posted_stuff = req.body.stock_ticker;
+        res.render('home', {
+            stock: doneAPI
+            
+        });
+    },req.body.stock_ticker);
+});
+
+
+// create about page route
+
+app.get('/about.html', function (req, res) {
+
+    res.render('about')
+})
+
 
 // Set Static Folder
 
 app.use(express.static(path.join(__dirname, 'public')));
 
 
-app.listen(PORT,()=> console.log('Server Listening on Port ' + PORT));
+app.listen(PORT, () => console.log('Server Listening on Port ' + PORT));
 
 
